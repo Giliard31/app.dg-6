@@ -1,0 +1,1153 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trader DG - Damião Gomes</title>
+    <style>
+        /* Estilos Globais - Dark Theme */
+        :root {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: rgba(255, 255, 255, 0.06);
+            --container-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #e0e0e0;
+            --text-secondary: #ccc;
+            --text-headings: #ffffff;
+            --accent-color: #17a2b8; /* Teal */
+            --accent-hover: #138496;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --success-bright: #33ff77;
+            --danger-bright: #ff4d4d;
+            --disabled-bg: #4a4a5a;
+            --disabled-text: #888;
+            --input-bg: rgba(0, 0, 0, 0.3);
+            --input-border: rgba(255, 255, 255, 0.2);
+            --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+            --scrollbar-track: rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        /* Container Base */
+        .container, .login-container {
+            max-width: 650px;
+            background: var(--container-bg);
+            backdrop-filter: blur(12px);
+            border-radius: 15px;
+            padding: 25px 30px; /* More horizontal padding */
+            border: 1px solid var(--container-border);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+            /* Initially hidden, JS will show */
+             display: none;
+        }
+
+        /* --- Typography --- */
+        h1, h2, h3 {
+            color: var(--text-headings);
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+        h1 { font-size: 28px; }
+        h2 { font-size: 24px; margin-bottom: 20px; }
+        h4 { /* For section titles like Asset Selector */
+            color: var(--text-secondary);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--container-border);
+            padding-bottom: 8px;
+        }
+        p { line-height: 1.6; }
+        p.info-text {
+            font-size: 14px;
+            color: rgba(224, 224, 224, 0.8);
+            margin-bottom: 20px;
+        }
+        p.error {
+            color: var(--danger-bright);
+            font-weight: bold;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none; /* Initially hidden */
+        }
+
+        /* --- Buttons --- */
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-color);
+            color: var(--text-headings);
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.3s ease, opacity 0.3s ease;
+            box-sizing: border-box;
+            margin-top: 10px; /* Consistent top margin */
+            margin-bottom: 10px;
+        }
+        button:last-child { margin-bottom: 0; }
+
+        button:hover:not(:disabled) {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background: var(--disabled-bg);
+            color: var(--disabled-text);
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+        }
+
+        /* Specific Button Styles */
+        #manualSignalButton { background: var(--success-color); }
+        #manualSignalButton:hover:not(:disabled) { background: #218838; } /* Darker green */
+        #startBot[data-running="true"] { background: var(--danger-color); }
+        #startBot[data-running="true"]:hover:not(:disabled) { background: #c82333; } /* Darker red */
+
+        /* Back Button */
+        .back-button {
+            display: inline-block;
+            width: auto;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+            margin-bottom: 15px;
+            float: left; /* Align left */
+            margin-right: 10px; /* Space if other elements were inline */
+            margin-top: 0; /* Reset */
+        }
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.03);
+        }
+        /* Clearfix for floated back button */
+        h1, h2, form, .timeframe-selector, .asset-selector, .user-list, #signals, p.info-text, #startBot, #manualSignalButton {
+            clear: both;
+        }
+
+        /* --- Forms & Inputs --- */
+        input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px 15px;
+            margin: 10px 0;
+            border: 1px solid var(--input-border);
+            border-radius: 5px;
+            font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-primary);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        input::placeholder { color: var(--text-secondary); opacity: 0.7; }
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.3); /* Accent glow */
+        }
+
+        /* --- Checkboxes --- */
+        input[type="checkbox"] {
+            margin-right: 8px;
+            vertical-align: middle;
+            cursor: pointer;
+            accent-color: var(--accent-color); /* Theme color */
+            width: 16px; /* Control size */
+            height: 16px;
+        }
+        label {
+            cursor: pointer;
+            color: var(--text-secondary);
+            vertical-align: middle;
+            font-size: 14px;
+        }
+        input[type="checkbox"]:disabled {
+             cursor: not-allowed;
+             opacity: 0.6;
+        }
+         input[type="checkbox"]:disabled + label {
+            cursor: not-allowed;
+            opacity: 0.6;
+            color: var(--disabled-text);
+        }
+
+        /* --- Timeframe Selector --- */
+        .timeframe-selector {
+            margin: 20px 0;
+            padding: 15px 0;
+            text-align: center;
+            border-top: 1px solid var(--container-border);
+            border-bottom: 1px solid var(--container-border);
+            display: flex; /* Use flexbox for alignment */
+            justify-content: center;
+            align-items: center;
+            gap: 20px; /* Space between items */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+        .timeframe-selector span { /* Label "Bot Timeframes:" */
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-right: 0; /* Removed default margin, using gap */
+        }
+        .timeframe-selector label {
+             margin: 0; /* Reset default margin */
+             display: inline-flex; /* Ensure label and checkbox align */
+             align-items: center;
+        }
+
+
+        /* --- Asset Selector --- */
+        .asset-selector {
+            margin-bottom: 20px;
+            padding-top: 10px; /* Reduced top padding as h4 has margin */
+            text-align: left;
+        }
+        .asset-selector-controls {
+            margin-bottom: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .asset-selector-controls button {
+            width: auto; /* Fit content */
+            padding: 6px 12px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--text-secondary);
+            margin: 0; /* Reset */
+            font-weight: normal; /* Lighter weight for utility buttons */
+        }
+        .asset-selector-controls button:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.25);
+            transform: none;
+        }
+        #asset-checkboxes {
+            max-height: 160px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsive columns */
+            gap: 8px 15px;
+            padding: 10px;
+            background: rgba(0,0,0, 0.15);
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            /* Custom Scrollbar */
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        }
+        #asset-checkboxes::-webkit-scrollbar { width: 8px; }
+        #asset-checkboxes::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 4px; }
+        #asset-checkboxes::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 4px; }
+
+        .asset-item label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            width: 100%; /* Ensure label takes full grid item width */
+        }
+        .asset-item input[type="checkbox"] { flex-shrink: 0; } /* Prevent checkbox shrinking */
+
+
+        /* --- Signals Display --- */
+        #signals {
+            max-height: 35vh;
+            overflow-y: auto;
+            margin-top: 20px;
+            padding-right: 5px; /* Space for scrollbar */
+            scrollbar-width: thin;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        }
+        #signals::-webkit-scrollbar { width: 8px; }
+        #signals::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 4px; }
+        #signals::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 4px; border: 2px solid transparent; background-clip: content-box; }
+
+        .signal {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--container-border);
+            border-left-width: 5px;
+            border-left-style: solid;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s ease, background 0.3s ease;
+            text-align: left;
+            flex-wrap: wrap;
+            gap: 5px 15px; /* Increased gap */
+            position: relative;
+        }
+        .signal:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .signal .source {
+            font-size: 10px;
+            color: rgba(224, 224, 224, 0.6);
+            position: absolute;
+            top: 4px;
+            right: 10px;
+            font-style: italic;
+            background: rgba(0,0,0,0.4);
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+
+        .signal.success { border-left-color: var(--success-color); }
+        .signal.danger { border-left-color: var(--danger-color); }
+
+        .signal strong { /* Asset */
+            font-size: 16px;
+            color: var(--text-headings);
+            flex-basis: 160px; /* Slightly more base width */
+            flex-grow: 1;
+            min-width: 120px; /* Ensure asset name readable */
+            line-height: 1.3;
+        }
+
+        .signal .direction { /* Direction Text */
+            font-weight: bold;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: 5px;
+            text-align: center;
+            min-width: 100px; /* Ensure button-like width */
+            flex-shrink: 0; /* Prevent shrinking */
+            color: #fff; /* White text for directions */
+        }
+        .signal .direction.call { background: var(--success-color); }
+        .signal .direction.put { background: var(--danger-color); }
+
+
+        .signal span.expiry-time { /* Time */
+            font-size: 14px;
+            color: var(--text-secondary);
+             white-space: nowrap;
+             margin-left: auto; /* Push right */
+             padding-left: 10px; /* Space from direction */
+             text-align: right; /* Align text right */
+             flex-shrink: 0;
+        }
+
+        .signal .result {
+            font-weight: bold;
+            font-size: 14px;
+            flex-basis: 100%; /* Full width when wrapped */
+            text-align: right;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed rgba(255,255,255,0.15);
+        }
+        .signal .result.win { color: var(--success-bright); }
+        .signal .result.loss { color: var(--danger-bright); }
+
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+
+
+        /* --- Admin Page Specifics --- */
+        #adminPage { max-width: 550px; }
+        .user-list {
+            margin-top: 30px; text-align: left; max-height: 40vh; overflow-y: auto; padding-right: 5px;
+            scrollbar-width: thin; scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+        }
+        .user-list::-webkit-scrollbar { width: 8px; }
+        .user-list::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 4px; }
+        .user-list::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb); border-radius: 4px; }
+
+        .user-list h3 { /* Sticky Header */
+            margin-bottom: 15px; text-align: center; position: sticky; top: -1px; /* Stick slightly better */
+            background: rgba(22, 33, 62, 0.9); /* Darker, less transparent */
+            padding: 10px 0; z-index: 10; backdrop-filter: blur(5px);
+            color: var(--text-headings); border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Add shadow */
+         }
+        .user-list div.user-item { /* Individual User */
+            background: rgba(255, 255, 255, 0.04);
+            padding: 12px 15px; margin-bottom: 8px; border-radius: 5px; font-size: 13px; line-height: 1.5;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-secondary);
+            display: flex; /* Use flex for better structure */
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap; /* Allow wrapping */
+            gap: 5px 15px;
+        }
+        .user-list div.user-item span.user-email {
+             font-weight: bold;
+             color: var(--text-primary);
+             word-break: break-all; /* Break long emails */
+             flex-grow: 1; /* Allow email to take space */
+        }
+        .user-list div.user-item span.user-status {
+            font-weight: bold; margin-left: 5px; flex-shrink: 0;
+            padding: 2px 6px; border-radius: 4px; font-size: 11px;
+        }
+        .user-list div.user-item .expired { color: #fff; background-color: var(--danger-color); }
+        .user-list div.user-item .pending { color: #333; background-color: #ffcc66; }
+        .user-list div.user-item .active { color: #fff; background-color: var(--success-color); }
+
+
+        /* --- Login/Create Password Page Specifics --- */
+        .login-container, #createPasswordPage { width: 380px; max-width: 100%; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Página de Login (Starts Visible) -->
+    <div id="loginPage" class="login-container" style="display: block;">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Seu E-mail" required autocomplete="email">
+            <input type="password" id="password" placeholder="Senha" required autocomplete="current-password">
+            <button type="submit">Entrar</button>
+        </form>
+        <p id="errorMessage" class="error"></p>
+    </div>
+
+    <!-- Página do Administrador -->
+    <div id="adminPage" class="container">
+        <button class="back-button" id="backToLoginAdmin">← Voltar</button>
+        <h1>Painel Admin</h1>
+        <form id="addUserForm">
+            <input type="email" id="newUserEmail" placeholder="E-mail do Novo Usuário" required>
+            <input type="number" id="accessDays" placeholder="Dias de Acesso (Ex: 30)" required min="1">
+            <button type="submit">Adicionar/Atualizar Usuário</button>
+        </form>
+        <div class="user-list">
+            <h3>Lista de Usuários</h3>
+            <div id="userList"> <!-- User items will be added here --> </div>
+        </div>
+    </div>
+
+    <!-- Página de Criação de Senha -->
+    <div id="createPasswordPage" class="container">
+        <button class="back-button" id="backToLoginCreate">← Voltar</button>
+        <h2>Criar Senha</h2>
+        <form id="createPasswordForm">
+             <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 15px;">Crie uma senha para sua conta (<span id="createPassEmail"></span>).</p>
+            <input type="password" id="newPassword" placeholder="Digite sua Nova Senha (mín. 4 caracteres)" required autocomplete="new-password">
+            <button type="submit">Salvar Senha</button>
+        </form>
+        <p id="passwordError" class="error"></p>
+    </div>
+
+    <!-- Página Principal (Dashboard) -->
+    <div id="dashboardPage" class="container">
+        <button class="back-button" id="backToLoginDashboard">← Voltar</button>
+        <h1><span style="font-size: 32px; vertical-align: middle;">🤖</span> Trader DG - Sinais</h1>
+        <p class="info-text">Sinais automáticos para timeframes e ativos selecionados.</p>
+
+        <!-- Timeframe Selection -->
+        <div class="timeframe-selector">
+            <span>Bot Timeframes:</span>
+            <div>
+                <input type="checkbox" id="tf_m1" value="1" name="timeframe">
+                <label for="tf_m1">M1</label>
+            </div>
+            <div>
+                <input type="checkbox" id="tf_m5" value="5" name="timeframe" checked> <!-- Default M5 checked -->
+                <label for="tf_m5">M5</label>
+            </div>
+            <div>
+                <input type="checkbox" id="tf_m15" value="15" name="timeframe">
+                <label for="tf_m15">M15</label>
+            </div>
+        </div>
+
+        <!-- Asset Selection -->
+        <div class="asset-selector">
+             <h4>Selecionar Ativos (Bot Automático):</h4>
+             <div class="asset-selector-controls">
+                <button id="selectAllAssets">Selecionar Todos</button>
+                <button id="deselectAllAssets">Desselecionar Todos</button>
+            </div>
+             <div id="asset-checkboxes">
+                 <!-- Checkboxes filled by JS -->
+             </div>
+        </div>
+
+        <button id="startBot" data-running="false">Iniciar Bot</button>
+        <button id="manualSignalButton">Gerar Sinal Manual (M2)</button>
+
+        <div id="signals">
+            <!-- Sinais serão inseridos aqui -->
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const loginPage = document.getElementById('loginPage');
+        const adminPage = document.getElementById('adminPage');
+        const createPasswordPage = document.getElementById('createPasswordPage');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const errorMessageElement = document.getElementById('errorMessage');
+        const addUserForm = document.getElementById('addUserForm');
+        const newUserEmailInput = document.getElementById('newUserEmail');
+        const accessDaysInput = document.getElementById('accessDays');
+        const userListDiv = document.getElementById('userList');
+        const createPasswordForm = document.getElementById('createPasswordForm');
+        const newPasswordInput = document.getElementById('newPassword');
+        const passwordErrorElement = document.getElementById('passwordError');
+        const createPassEmailSpan = document.getElementById('createPassEmail'); // Span to show email on create pass page
+        const startBotButton = document.getElementById('startBot');
+        const manualSignalButton = document.getElementById('manualSignalButton');
+        const signalsContainer = document.getElementById('signals');
+        const backButtons = document.querySelectorAll('.back-button');
+        // Timeframe Checkboxes
+        const tfM1Checkbox = document.getElementById('tf_m1');
+        const tfM5Checkbox = document.getElementById('tf_m5');
+        const tfM15Checkbox = document.getElementById('tf_m15');
+        const timeframeCheckboxes = [tfM1Checkbox, tfM5Checkbox, tfM15Checkbox];
+        // Asset Selector Elements
+        const assetCheckboxesContainer = document.getElementById('asset-checkboxes');
+        const selectAllAssetsButton = document.getElementById('selectAllAssets');
+        const deselectAllAssetsButton = document.getElementById('deselectAllAssets');
+        let allAssetCheckboxes = []; // Will be populated after creation
+
+
+        // --- State Variables ---
+        let usersData = {};
+        const adminCredentials = { username: "adm1939@trading.com", password: "1939" };
+        let signalIntervals = {}; // Stores { '1': intervalId, '5': intervalId, '15': intervalId }
+        let scheduleTimeouts = {}; // Stores { '1': timeoutId, '5': timeoutId, '15': timeoutId }
+        let isBotRunning = false;
+        let selectedAssetsForBot = []; // Holds assets chosen *when the bot was started*
+        const MAX_SIGNALS_DISPLAYED = 40; // Slightly increased max signals
+
+        // Comprehensive list of assets
+        const ALL_ASSETS = [
+            "EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD", "EUR/GBP", "NZD/USD",
+            "USD/CHF", "EUR/JPY", "GBP/JPY", "AUD/JPY", "CAD/JPY", "CHF/JPY", "NZD/JPY",
+            "EUR/AUD", "GBP/AUD", "EUR/CAD", "GBP/CAD", "EUR/CHF", "GBP/CHF", "AUD/CAD",
+            "AUD/CHF", "AUD/NZD", "CAD/CHF", "NZD/CAD", "NZD/CHF", "EUR/NZD", "GBP/NZD",
+            "USD/NOK", "USD/SEK", "USD/ZAR", "USD/MXN", "USD/TRY", "XAU/USD", "XAG/USD", // Added TRY, Gold, Silver
+            "BTC/USD", "ETH/USD" // Added some crypto examples
+        ].sort(); // Sort alphabetically
+
+        // --- Helper Functions ---
+        function showError(messageElement, message) {
+            messageElement.textContent = message;
+            messageElement.style.display = "block";
+        }
+        function hideError(messageElement) {
+            messageElement.style.display = "none";
+        }
+        function saveData() {
+            try {
+                localStorage.setItem("usersData", JSON.stringify(usersData));
+            } catch (e) {
+                console.error("Erro ao salvar dados:", e);
+                alert("Não foi possível salvar os dados. O armazenamento local pode estar cheio ou indisponível.");
+            }
+        }
+        function loadData() {
+            const savedUsers = localStorage.getItem("usersData");
+            if (savedUsers) {
+                try {
+                    usersData = JSON.parse(savedUsers);
+                    // Convert stored date strings back to Date objects
+                    for (const email in usersData) {
+                        if (usersData[email].expirationDate && typeof usersData[email].expirationDate === 'string') {
+                            usersData[email].expirationDate = new Date(usersData[email].expirationDate);
+                        }
+                    }
+                } catch (e) {
+                    console.error("Erro ao carregar dados:", e);
+                    usersData = {}; // Reset if data is corrupted
+                }
+            } else {
+                usersData = {}; // Initialize if no data exists
+            }
+        }
+        function isAdmin(username, password) {
+            return username === adminCredentials.username && password === adminCredentials.password;
+        }
+        function isValidUserNeedingPassword(email) {
+            const user = usersData[email];
+            return user && !user.password && !isAccessExpired(user);
+        }
+        function isAccessExpired(user) {
+            if (!user || !user.expirationDate) return true; // No user or no date means expired/invalid
+            const now = new Date();
+            // Ensure expirationDate is a Date object before comparison
+            const expirationDate = (user.expirationDate instanceof Date) ? user.expirationDate : new Date(user.expirationDate);
+            if (isNaN(expirationDate.getTime())) return true; // Invalid date means expired
+            return now > expirationDate;
+        }
+        // Format date consistently
+        function formatDate(date) {
+            if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+                return 'Inválida';
+            }
+            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+
+        // --- Page Navigation ---
+        function showPage(pageElement) {
+            // Hide all pages first
+            loginPage.style.display = 'none';
+            adminPage.style.display = 'none';
+            createPasswordPage.style.display = 'none';
+            dashboardPage.style.display = 'none';
+
+            // Apply fade-in animation
+            pageElement.classList.remove('fade-in'); // Remove first to re-trigger animation
+            void pageElement.offsetWidth; // Trigger reflow to restart animation
+            pageElement.style.display = 'block'; // Make it visible
+            pageElement.classList.add('fade-in'); // Add animation class
+            window.scrollTo(0, 0); // Scroll to top when changing pages
+        }
+
+        function showLoginPage() {
+            stopBot(); // Ensure bot is stopped
+            hideError(errorMessageElement);
+            hideError(passwordErrorElement);
+            usernameInput.value = '';
+            passwordInput.value = '';
+            if (manualSignalButton) { // Check if dashboard elements exist
+                 manualSignalButton.disabled = false;
+                 manualSignalButton.textContent = 'Gerar Sinal Manual (M2)';
+            }
+            // Reset forms
+            loginForm.reset();
+            if (createPasswordForm) createPasswordForm.reset();
+            if (addUserForm) addUserForm.reset();
+
+            showPage(loginPage);
+            usernameInput.focus();
+        }
+
+        // --- Asset Checkbox Management ---
+        function populateAssetCheckboxes() {
+            assetCheckboxesContainer.innerHTML = ''; // Clear existing
+            allAssetCheckboxes = []; // Reset the array
+
+            ALL_ASSETS.forEach(asset => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'asset-item';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `asset_${asset.replace(/[^a-zA-Z0-9]/g, '')}`; // Create a safe ID
+                checkbox.value = asset;
+                checkbox.name = 'assets';
+                checkbox.checked = true; // Default to checked
+
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = asset;
+
+                itemDiv.appendChild(checkbox);
+                itemDiv.appendChild(label);
+                assetCheckboxesContainer.appendChild(itemDiv);
+                allAssetCheckboxes.push(checkbox); // Store reference
+            });
+        }
+
+        function setAssetCheckboxesState(enabled) {
+             allAssetCheckboxes.forEach(cb => cb.disabled = !enabled);
+             selectAllAssetsButton.disabled = !enabled;
+             deselectAllAssetsButton.disabled = !enabled;
+        }
+
+        // --- Bot Control Functions ---
+        function stopBot() {
+            if (!isBotRunning) return; // Do nothing if not running
+
+            console.log(`(${new Date().toLocaleTimeString()}) Parando Bot...`);
+            isBotRunning = false;
+            Object.values(signalIntervals).forEach(clearInterval);
+            Object.values(scheduleTimeouts).forEach(clearTimeout);
+            signalIntervals = {};
+            scheduleTimeouts = {};
+            selectedAssetsForBot = []; // Clear the selected assets for the run
+
+            if (startBotButton) { // Ensure button exists
+                startBotButton.textContent = 'Iniciar Bot';
+                startBotButton.dataset.running = 'false';
+                startBotButton.disabled = false;
+            }
+            // Re-enable controls
+            timeframeCheckboxes.forEach(cb => cb.disabled = false);
+            setAssetCheckboxesState(true); // Re-enable asset checkboxes
+
+            console.log("Bot parado.");
+        }
+
+        function startSelectedBot() {
+            if (isBotRunning) return; // Should not happen if button logic is correct
+
+            const selectedTimeframes = timeframeCheckboxes
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.value));
+
+            // Get currently selected assets from the checkboxes
+            selectedAssetsForBot = allAssetCheckboxes
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            // Validation
+            if (selectedTimeframes.length === 0) {
+                alert("Por favor, selecione pelo menos um timeframe (M1, M5, M15).");
+                return;
+            }
+            if (selectedAssetsForBot.length === 0) {
+                alert("Por favor, selecione pelo menos um ativo para o bot operar.");
+                return;
+            }
+
+            // Start the Bot
+            isBotRunning = true;
+            signalsContainer.innerHTML = ''; // Clear previous signals
+            startBotButton.textContent = 'Parar Bot';
+            startBotButton.dataset.running = 'true';
+            startBotButton.disabled = true; // Disable briefly while starting/scheduling
+
+            // Disable controls
+            timeframeCheckboxes.forEach(cb => cb.disabled = true);
+            setAssetCheckboxesState(false); // Disable asset checkboxes
+
+            console.log(`(${new Date().toLocaleTimeString()}) Iniciando Bot para timeframes: ${selectedTimeframes.join(', ')}M | Ativos: ${selectedAssetsForBot.length} selecionados`);
+
+            // Schedule the first signal generation for each selected timeframe
+            selectedTimeframes.forEach(tf => {
+                scheduleNextSignal(tf);
+            });
+
+            // Re-enable the start/stop button shortly after scheduling starts
+            setTimeout(() => {
+                if (isBotRunning) startBotButton.disabled = false;
+            }, 1500); // Slightly longer delay to ensure scheduling completes
+        }
+
+        // --- Core Signal Logic ---
+        function displaySignal(asset, isCall, expiryTime, sourceLabel) {
+            const timeString = expiryTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const signalText = isCall ? 'COMPRA (CALL)' : 'VENDA (PUT)';
+            const signalClass = isCall ? 'success' : 'danger';
+            const directionClass = isCall ? 'call' : 'put';
+
+            const signalDiv = document.createElement('div');
+            signalDiv.className = `signal ${signalClass} fade-in`; // Add fade-in immediately
+            signalDiv.innerHTML = `
+                <span class="source">${sourceLabel}</span>
+                <strong>${asset}</strong>
+                <div class="direction ${directionClass}">${signalText}</div>
+                <span class="expiry-time">Expira: ${timeString}</span>
+                <div class="result">Resultado: Aguardando...</div>
+            `;
+            signalsContainer.prepend(signalDiv); // Add to the top
+
+            // Limit number of signals displayed
+            while (signalsContainer.children.length > MAX_SIGNALS_DISPLAYED) {
+                signalsContainer.removeChild(signalsContainer.lastChild);
+            }
+
+            // Simulate result after expiry
+            const timeUntilExpiry = expiryTime.getTime() - Date.now();
+            if (timeUntilExpiry > 0) {
+                setTimeout(() => {
+                    // Ensure the element still exists in the DOM before updating
+                    if (signalsContainer.contains(signalDiv)) {
+                        const isSuccess = Math.random() > 0.42; // ~58% Win Rate Simulation
+                        const resultClass = isSuccess ? 'win' : 'loss';
+                        const resultText = isSuccess ? 'WIN ✅' : 'LOSS ❌';
+                        const resultElement = signalDiv.querySelector('.result');
+                        if (resultElement) {
+                           resultElement.textContent = `Resultado: ${resultText}`;
+                           resultElement.className = `result ${resultClass}`;
+                        }
+                    }
+                }, timeUntilExpiry + 1000); // Check result 1 second after expiry
+            } else {
+                // If already expired when displayed (should be rare with scheduling)
+                 if (signalsContainer.contains(signalDiv)) {
+                     const resultElement = signalDiv.querySelector('.result');
+                     if (resultElement) {
+                         resultElement.textContent = `Resultado: Expirado`;
+                         resultElement.className = `result loss`; // Mark as loss if expired instantly
+                     }
+                 }
+            }
+        }
+
+        /**
+         * Generates the parameters for an automatic signal for a specific timeframe.
+         * Uses the 'selectedAssetsForBot' array defined when the bot was started.
+         */
+        function generateSignalForTimeframe(timeframeMinutes) {
+            // Crucial checks inside the generation loop
+            if (!isBotRunning || !selectedAssetsForBot || selectedAssetsForBot.length === 0) {
+                console.warn(`(${new Date().toLocaleTimeString()}) Tentativa de gerar sinal M${timeframeMinutes} falhou: Bot parado ou sem ativos selecionados.`);
+                 // Attempt to clear related timers if found in an inconsistent state
+                 if (signalIntervals[timeframeMinutes]) clearInterval(signalIntervals[timeframeMinutes]);
+                 if (scheduleTimeouts[timeframeMinutes]) clearTimeout(scheduleTimeouts[timeframeMinutes]);
+                 delete signalIntervals[timeframeMinutes];
+                 delete scheduleTimeouts[timeframeMinutes];
+                return;
+            }
+
+            const timeframeMillis = timeframeMinutes * 60 * 1000;
+            const now = new Date();
+            // Expiration time at the exact end of the current candle
+            const expiryTime = new Date( Math.ceil(now.getTime() / timeframeMillis) * timeframeMillis );
+
+            // Avoid generating if expiry is too close (<5s) or already passed
+            if (expiryTime.getTime() - now.getTime() < 5000) {
+                 console.log(`(${new Date().toLocaleTimeString()}) M${timeframeMinutes}: Candle quase expirando (${Math.round((expiryTime.getTime() - now.getTime())/1000)}s). Pulando geração, reagendando.`);
+                 // Reschedule for the *next* interval's start, don't generate now.
+                 // Need to clear potential existing interval before rescheduling timeout.
+                 if (signalIntervals[timeframeMinutes]) {
+                    clearInterval(signalIntervals[timeframeMinutes]);
+                    delete signalIntervals[timeframeMinutes];
+                 }
+                 scheduleNextSignal(timeframeMinutes);
+                 return;
+            }
+
+            // Select random asset ONLY from the list chosen at bot start
+            const randomAsset = selectedAssetsForBot[Math.floor(Math.random() * selectedAssetsForBot.length)];
+            const isCall = Math.random() > 0.5; // 50/50 chance
+            const sourceLabel = `Auto M${timeframeMinutes}`;
+
+            console.log(`(${new Date().toLocaleTimeString()}) Sinal ${sourceLabel}: ${randomAsset} ${isCall ? 'CALL' : 'PUT'} @ Expira ${expiryTime.toLocaleTimeString()}`);
+            displaySignal(randomAsset, isCall, expiryTime, sourceLabel);
+        }
+
+        /**
+         * Schedules the next signal generation precisely at the start of the next candle.
+         */
+        function scheduleNextSignal(timeframeMinutes) {
+             if (!isBotRunning) return; // Check if bot is still running before scheduling
+
+             const timeframeMillis = timeframeMinutes * 60 * 1000;
+             const now = Date.now();
+             // Time until the exact start of the next candle interval
+             const timeToNextIntervalStart = timeframeMillis - (now % timeframeMillis);
+
+             console.log(`(${new Date().toLocaleTimeString()}) Agendando próxima geração M${timeframeMinutes} em ${Math.round(timeToNextIntervalStart / 1000)}s`);
+
+             // Clear any previous timeout for this timeframe to prevent duplicates
+             if (scheduleTimeouts[timeframeMinutes]) {
+                 clearTimeout(scheduleTimeouts[timeframeMinutes]);
+             }
+
+             scheduleTimeouts[timeframeMinutes] = setTimeout(() => {
+                 // --- Inside the timeout ---
+                 // Double check bot status before generating/scheduling interval
+                 if (!isBotRunning) {
+                     console.log(`(${new Date().toLocaleTimeString()}) Bot parado antes da geração agendada M${timeframeMinutes}.`);
+                     return;
+                 }
+
+                 // Generate the first signal at the start of the candle
+                 generateSignalForTimeframe(timeframeMinutes);
+
+                 // After the first generation, set up the recurring interval for subsequent candles
+                 // Clear any potentially old interval from a previous run (safety check)
+                 if (signalIntervals[timeframeMinutes]) {
+                     clearInterval(signalIntervals[timeframeMinutes]);
+                 }
+
+                 // ONLY set the interval if the bot is STILL running
+                 if (isBotRunning) {
+                     signalIntervals[timeframeMinutes] = setInterval(() => {
+                         // Check bot status *inside* the interval callback as well
+                         if (!isBotRunning) {
+                             clearInterval(signalIntervals[timeframeMinutes]);
+                             delete signalIntervals[timeframeMinutes]; // Clean up
+                             console.log(`(${new Date().toLocaleTimeString()}) Intervalo M${timeframeMinutes} parado devido ao bot ser desligado.`);
+                             return;
+                         }
+                         // Generate signal for this interval
+                         generateSignalForTimeframe(timeframeMinutes);
+                     }, timeframeMillis); // Repeat every timeframe duration
+                 } else {
+                     console.log(`(${new Date().toLocaleTimeString()}) Bot foi parado imediatamente após a geração agendada M${timeframeMinutes}, intervalo não iniciado.`);
+                 }
+
+             }, timeToNextIntervalStart + 100); // Add small buffer (100ms) to ensure it fires just *after* the candle starts
+         }
+
+        // --- Event Handlers ---
+
+        // Login
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const username = usernameInput.value.trim().toLowerCase();
+            const password = passwordInput.value;
+            hideError(errorMessageElement);
+
+            if (!username || !password) {
+                 showError(errorMessageElement, "Por favor, preencha e-mail e senha.");
+                 return;
+            }
+
+            if (isAdmin(username, password)) {
+                loadUserList(); // Load data for admin view
+                showPage(adminPage);
+                return;
+            }
+
+            const user = usersData[username];
+            if (user && user.password === password) { // User exists and password matches
+                if (isAccessExpired(user)) {
+                    showError(errorMessageElement, "Seu acesso expirou! Contate o administrador.");
+                } else {
+                    // Reset dashboard state before showing
+                    signalsContainer.innerHTML = ''; // Clear signals
+                    startBotButton.disabled = false;
+                    manualSignalButton.disabled = false;
+                    tfM1Checkbox.checked = false;
+                    tfM5Checkbox.checked = true; // M5 default
+                    tfM15Checkbox.checked = false;
+                    timeframeCheckboxes.forEach(cb => cb.disabled = false);
+                    setAssetCheckboxesState(true); // Enable asset selection
+                    // Check all assets by default on login
+                     allAssetCheckboxes.forEach(cb => cb.checked = true);
+
+                    showPage(dashboardPage);
+                }
+            } else if (isValidUserNeedingPassword(username)) { // User exists, needs password, access valid
+                 createPasswordPage.dataset.email = username; // Store email for use in create pass page
+                 createPassEmailSpan.textContent = username; // Display email to user
+                 newPasswordInput.value = '';
+                 hideError(passwordErrorElement);
+                 showPage(createPasswordPage);
+                 newPasswordInput.focus();
+            } else { // Handle other cases: wrong password, user not found, expired before password set
+                 const userExists = usersData[username];
+                 if(userExists && isAccessExpired(userExists)) {
+                    showError(errorMessageElement, "Seu acesso expirou! Contate o administrador.");
+                 } else if (userExists && userExists.password && userExists.password !== password) {
+                     showError(errorMessageElement, "Senha incorreta!");
+                 } else if (userExists && !userExists.password) { // User exists, password not set, but access check failed in isValidUserNeedingPassword
+                     showError(errorMessageElement, "Seu acesso pode ter expirado antes da criação da senha. Contate o administrador.");
+                 }
+                 else {
+                    showError(errorMessageElement, "Usuário não encontrado ou inválido.");
+                 }
+            }
+        });
+
+        // Add/Update User (Admin)
+        addUserForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const email = newUserEmailInput.value.trim().toLowerCase();
+            const accessDays = parseInt(accessDaysInput.value);
+
+            // Basic validation
+            if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                alert("Por favor, insira um e-mail válido."); return;
+            }
+            if (isNaN(accessDays) || accessDays <= 0) {
+                alert("Por favor, insira um número positivo de dias de acesso."); return;
+            }
+
+            const expirationDate = new Date();
+            // Set time to end of the day for clarity
+            expirationDate.setDate(expirationDate.getDate() + accessDays);
+            expirationDate.setHours(23, 59, 59, 999);
+
+            const formattedDate = formatDate(expirationDate);
+
+            if (usersData[email]) { // Update existing user
+                 usersData[email].expirationDate = expirationDate;
+                 // Reset password if admin updates? Optional - current logic keeps existing password
+                 alert(`Acesso de ${email} atualizado. Expira em: ${formattedDate}.`);
+            } else { // Add new user
+                usersData[email] = {
+                    expirationDate: expirationDate,
+                    password: null // New users need to create a password
+                };
+                alert(`Usuário ${email} adicionado! Necessita criar senha. Expira em: ${formattedDate}`);
+            }
+            saveData(); // Save changes to localStorage
+            loadUserList(); // Refresh the displayed list
+            addUserForm.reset(); // Clear the form
+        });
+
+        // Create Password
+        createPasswordForm.addEventListener('submit', function (e) {
+             e.preventDefault();
+            const email = createPasswordPage.dataset.email; // Retrieve email stored earlier
+            const newPassword = newPasswordInput.value;
+            hideError(passwordErrorElement);
+
+            if (!newPassword || newPassword.length < 4) {
+                showError(passwordErrorElement, "Senha deve ter pelo menos 4 caracteres."); return;
+            }
+            if (!email) { // Safety check
+                 showError(passwordErrorElement, "Erro: E-mail do usuário não encontrado. Tente fazer login novamente."); return;
+            }
+
+            const user = usersData[email];
+            // Re-validate user status before setting password
+            if (user && !user.password && !isAccessExpired(user)) {
+                user.password = newPassword;
+                saveData();
+                alert("Senha criada com sucesso! Faça o login agora.");
+                // Pre-fill login form and go back
+                usernameInput.value = email;
+                passwordInput.value = ''; // Clear password field for security
+                showLoginPage();
+                passwordInput.focus(); // Focus password field
+            } else {
+                 showError(passwordErrorElement, "Erro: Não foi possível definir a senha. O usuário pode ser inválido, expirado, ou a senha já foi definida.");
+            }
+         });
+
+        // Back Buttons
+        backButtons.forEach(button => {
+            button.addEventListener('click', showLoginPage); // All back buttons go to login
+        });
+
+        // Start/Stop Bot Button
+        startBotButton.addEventListener('click', function () {
+            if (isBotRunning) {
+                stopBot();
+            } else {
+                startSelectedBot();
+            }
+        });
+
+        // Manual Signal Button Click (Generates one M2 signal)
+        manualSignalButton.addEventListener('click', function() {
+            manualSignalButton.disabled = true;
+            manualSignalButton.textContent = 'Analisando (7s)...';
+            console.log(`(${new Date().toLocaleTimeString()}) Iniciando análise manual M2...`);
+
+            setTimeout(() => {
+                 console.log(`(${new Date().toLocaleTimeString()}) Análise manual concluída. Gerando sinal M2.`);
+                 const manualTimeframeMinutes = 2; // Fixed 2M timeframe for manual signals
+                 const timeframeMillis = manualTimeframeMinutes * 60 * 1000;
+                 const now = new Date();
+
+                 // Calculate the end time of the *current* 2M candle
+                 let expiryTime = new Date( Math.ceil(now.getTime() / timeframeMillis) * timeframeMillis );
+
+                // If the calculated expiry is the *current* candle end and it's too close (<10s), push it to the *next* one
+                if (expiryTime.getTime() - now.getTime() < 10000) {
+                     expiryTime.setTime(expiryTime.getTime() + timeframeMillis); // Move to the end of the NEXT candle
+                     console.log(`(${new Date().toLocaleTimeString()}) Expiração manual M2 ajustada para o próximo ciclo.`);
+                }
+
+                 // Manual signal picks from ALL available assets, regardless of bot selection
+                 const randomAsset = ALL_ASSETS[Math.floor(Math.random() * ALL_ASSETS.length)];
+                 const isCall = Math.random() > 0.5;
+                 const sourceLabel = `Manual M2`; // Indicate manual source and timeframe
+
+                 displaySignal(randomAsset, isCall, expiryTime, sourceLabel);
+                 console.log(`(${new Date().toLocaleTimeString()}) Sinal Manual M2: ${randomAsset} ${isCall ? 'CALL' : 'PUT'} @ Expira ${expiryTime.toLocaleTimeString()}`);
+
+                 // Reset button state
+                 manualSignalButton.disabled = false;
+                 manualSignalButton.textContent = 'Gerar Sinal Manual (M2)';
+
+            }, 7000); // 7 second simulated analysis delay
+        });
+
+        // Asset Selection Buttons
+        selectAllAssetsButton.addEventListener('click', () => {
+            allAssetCheckboxes.forEach(cb => cb.checked = true);
+        });
+        deselectAllAssetsButton.addEventListener('click', () => {
+             allAssetCheckboxes.forEach(cb => cb.checked = false);
+        });
+
+
+        // Function to load and display user list in admin panel
+        function loadUserList() {
+             userListDiv.innerHTML = ''; // Clear previous list
+            const sortedEmails = Object.keys(usersData).sort(); // Sort emails alphabetically
+
+            if (sortedEmails.length === 0) {
+                userListDiv.innerHTML = '<div style="text-align: center; padding: 15px; color: var(--text-secondary);">Nenhum usuário cadastrado.</div>';
+                return;
+            }
+
+            sortedEmails.forEach(email => {
+                const user = usersData[email];
+                const userDiv = document.createElement('div');
+                userDiv.className = 'user-item'; // Add class for styling
+
+                const expirationDate = user.expirationDate; // Already a Date object or null from loadData
+                const formattedDate = formatDate(expirationDate);
+                const isExpired = isAccessExpired(user);
+                let statusText = ''; let statusClass = '';
+
+                if (isExpired) {
+                    statusText = "Expirado"; statusClass = 'expired';
+                } else if (user.password) {
+                    statusText = "Ativo"; statusClass = 'active';
+                } else {
+                    statusText = "Aguardando Senha"; statusClass = 'pending';
+                }
+
+                userDiv.innerHTML = `
+                    <span class="user-email">${email}</span>
+                    <span>Expira em: ${formattedDate}</span>
+                    <span>Status: <span class="user-status ${statusClass}">${statusText}</span></span>
+                `;
+                if (isExpired) { userDiv.style.opacity = '0.7'; } // Dim expired users
+
+                userListDiv.appendChild(userDiv);
+            });
+        }
+
+        // --- Initialization ---
+        function initializeApp() {
+            console.log("Inicializando aplicação...");
+            loadData(); // Load user data from localStorage
+            populateAssetCheckboxes(); // Create asset checkboxes in the dashboard
+            showLoginPage(); // Start on the login page by default
+
+            // Add listener to stop bot if user navigates away
+            window.addEventListener('beforeunload', stopBot);
+            console.log("Aplicação inicializada.");
+        }
+
+        // Wait for the DOM to be fully loaded before running initialization
+        document.addEventListener('DOMContentLoaded', initializeApp);
+
+    </script>
+</body>
+</html>
